@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+
+<head>
+  <title>Simplist</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <div id="login-div" v-if="loggedIn">
+    <input id="email-input" type="text" v-model="user.email">
+    <br>
+    <input id="password-input" type="password" v-model="user.password">
+    <button @click="sendCredentials(2)">Login</button>
+    <button @click="sendCredentials(1)">Register</button>
+    <p id="login-err-p" @click="clearError">{{error}}</p>
+  </div>
+
+  <div id="main-div" v-else>
+    <button @click="newItem">New Item</button>
+    <br>
+    <ul>
+      <li id="#new-item-li" v-if="newItem.id==-1">
+        <input type="text" v-model="newItems.what" placeholder="What">
+      </li>
+      <li v-for="item in items" :key="item.id">
+      </li>
+    </ul>
+  </div>
+
+<script>
+  const App = {
+    data() {
+      const url = new URL("/ws", window.location.href);
+      url.protocol = "ws";
+      const ws = new WebSocket(url);
+      ws.onerror = (err) => console.log(`Websocket error: ${err}`);
+      ws.onclose = () => alert("Disconnected");
+      ws.onmessage = this.handleMsg;
+      return {
+        user: {email: "", password: ""},
+        loggedIn: false,
+        ws: ws,
+        items: [],
+        error: "",
+      };
+    },
+    methods: {
+      handleMsg(msg) {
+        const resp = JSON.parse(msg.data);
+        switch (resp.action) {
+          case "register:
+          case "login":
+            this.handleLoginResp(resp)
+            break;
+          case "insert":
+            this.handleInsertResp(resp);
+            break;
+          case "update":
+            this.handleUpdateResp(resp);
+            break;
+          case "get":
+            this.handleGetResp(resp);
+            break;
+          case "delete":
+            this.handleDeleteResp(resp);
+            break;
+          default:
+            this.error = resp.error;
+            break;
+        }
+      },
+      handleLoginResp(resp) {
+        // Success or Error are the only things that should be returned
+        if (resp.error) {
+          this.error = resp.error;
+          return;
+        }
+        this.loggedIn = true;
+        this.user.password = "";
+      },
+      handleInsertResp(resp) {
+      },
+      handleUpdateResp(resp) {
+      },
+      handleGetResp(resp) {
+      },
+      newItem() {
+      },
+      sendCredentials(action) {
+        ws.send(JSON.stringify({
+          id: 0,
+          action: action,
+          user: {
+            email: document.querySelector("#email-input"),
+            password: document.querySelector("#password-input"),
+          },
+        }));
+      },
+      clearError() {
+        this.error = "";
+      }
+    },
+  };
+
+
+</script>
+</body>
+
+</html>
